@@ -33,8 +33,17 @@ $(document).ready(function() {
             dataType: 'json',
             success: function(data) {
                 console.log(data);
+                if (!("message" in data)) {
+                    $("#reminder_time").val("");
+                    $("#phone_number").val("");
+                    $("#event_name").val("");
+                    $("#event_location").val("");
+                    $("#noshow").show()
+                } else {
+                    $("#noshow").text(data['message'])
+                    $("#noshow").show()
+                }
             }
         });
-
     });
 })

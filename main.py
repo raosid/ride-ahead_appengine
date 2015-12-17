@@ -100,7 +100,10 @@ def redirect_uri():
 
 @app.route('/dashboard')
 def dashboard():
-    return render_template('dashboard.html')
+    if 'access_token' not in sesh:
+        return redirect(url_for('index'))
+    else:
+        return render_template('dashboard.html')
 
 
 #Helper methods
@@ -134,6 +137,8 @@ def fetch_latitude_and_logitude_from_dictionary(dictionary):
 
 @app.route('/dashboard_webservice', methods=['POST'])
 def dashboard_webservice():
+    if sesh['access_token'] == None:
+        return redirect(url_for('index'))
     time_string = request.form['reminder_time']
     phone_number = request.form['phone_number']
     event_name = request.form['event_name']
@@ -176,6 +181,11 @@ def dashboard_webservice():
 
     return json.dumps(response.json())
 
+
+@app.route('/logout')
+def log_out_user():
+    sesh.pop('access_token', None)
+    return redirect(url_for('index'))
 
 
 
