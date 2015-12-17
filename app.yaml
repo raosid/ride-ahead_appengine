@@ -32,6 +32,23 @@ handlers:
 - url: /style
   static_dir: style
 
+# - url: /authenticate
+#   script: main.app
+
+- url: /redirect-uri
+  script: main.app
+
+- url: /authenticate
+  script: main.app
+
+- url: /policy
+  script: main.app
+
+ 
+
+
+
+
 # Third party libraries that are included in the App Engine SDK must be listed
 # here if you want to use them.  See
 # https://developers.google.com/appengine/docs/python/tools/libraries27 for
@@ -39,6 +56,8 @@ handlers:
 # of the App Engine SDK don't need to be listed here, instead add them to your
 # project directory, either as a git submodule or as a plain subdirectory.
 # TODO: List any other App Engine SDK libs you may need here.
-#libraries:
+libraries:
 #- name: jinja2
 #  version: latest
+- name: ssl
+  version: latest

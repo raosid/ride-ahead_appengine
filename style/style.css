@@ -1,8 +1,25 @@
-#form {
+/*#form {
     border: 2px solid black;
     margin-top: 8%;
 }
 
-body {
-    background-color: #0a2f3e;
+.header {
+    color: rgb(0, 0, 0);
+    text-align: center;
 }
+
+h1 {
+    font-size: 42pt;
+}
+
+h2 {
+    font-size: 32pt;
+}
+
+.btn-login {
+    margin-top: 10px;
+}
+
+#spinner {
+    display: none;
+}*/
