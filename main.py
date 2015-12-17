@@ -64,7 +64,7 @@ def login():
     params = {
         'response_type': 'code',
         'redirect_uri': 'https://rideahead-1152.appspot.com/redirect-uri',
-        'scopes': "profile,history_lite",
+        'scope': "profile",
     }
     url = generate_oauth_service().get_authorize_url(**params)
     return redirect(url)
@@ -84,19 +84,22 @@ def redirect_uri():
     # r = requests.post("https://login.uber.com/oauth/v2/token", params=parameters)
     # return r.json().get('access_token')
 
-    params = {
-        'client_id': "PQc6elZr9pVs1UcHizLEpIFtXcsrk6WN",
-        'client_secret': "sTe5UXYC1b5hC25CToNDzYkPOGljdl0RJoHrjrF8",
+    parameters = {
         'redirect_uri': 'https://rideahead-1152.appspot.com/redirect-uri',
         'code': request.args.get('code'),
-        'grant_type': 'authorization_code'
+        'grant_type': 'authorization_code',
     }
 
 
     response = requests.post(
         'https://login.uber.com/oauth/token',
-        data=params,
+        auth=(
+            'PQc6elZr9pVs1UcHizLEpIFtXcsrk6WN',
+            'sTe5UXYC1b5hC25CToNDzYkPOGljdl0RJoHrjrF8'
+        ),
+        data=parameters
     )
+
     return response.json().get('access_token')
 
 
