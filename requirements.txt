@@ -8,3 +8,4 @@ Flask==0.10
 uber_rides
 rauth==0.7.0
 requests==2.1.0
+parsedatetime

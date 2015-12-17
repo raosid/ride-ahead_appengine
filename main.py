@@ -14,6 +14,12 @@ import socket
 import json
 import requests
 import httplib
+import os
+import urllib
+import urllib2
+from datetime import datetime
+import parsedatetime as pdt
+import time
 app = Flask(__name__)
 app.requests_session = requests.Session()
 # Note: We don't need to call run() since our application is embedded within
@@ -72,18 +78,6 @@ def login():
 
 @app.route('/redirect-uri', methods=['GET'])
 def redirect_uri():
-    # auth_code = request.args.get('code')
-    # sesh['auth_code'] = auth_code
-    # parameters = {
-    #     'client_secret': 'sTe5UXYC1b5hC25CToNDzYkPOGljdl0RJoHrjrF8',
-    #     'client_id': 'PQc6elZr9pVs1UcHizLEpIFtXcsrk6WN',
-    #     'grant_type': 'authorization_code',
-    #     'redirect_uri': 'https://rideahead-1152.appspot.com/redirect-uri',
-    #     'code': auth_code
-    # }
-    # r = requests.post("https://login.uber.com/oauth/v2/token", params=parameters)
-    # return r.json().get('access_token')
-
     parameters = {
         'redirect_uri': 'https://rideahead-1152.appspot.com/redirect-uri',
         'code': request.args.get('code'),
@@ -99,9 +93,88 @@ def redirect_uri():
         ),
         data=parameters
     )
+    sesh['access_token'] = response.json().get('access_token')
+    return redirect('/dashboard')
 
-    return response.json().get('access_token')
 
+
+@app.route('/dashboard')
+def dashboard():
+    return render_template('dashboard.html')
+
+
+#Helper methods
+def get_latitude_and_longitude(event_location_natural):
+    try:
+        address_google = "https://maps.googleapis.com/maps/api/geocode/json?"
+        params = {
+            'address': event_location_natural,
+            'key': "AIzaSyBtepcI0RCcD4urTJ8NGbcyC86GxTM_CTU"
+        }
+        url = address_google + urllib.urlencode(params)
+        file_fetch = urllib2.urlopen(address_google + urllib.urlencode(params))
+        return json.loads(file_fetch.read())
+    except urllib2.URLError, e:
+        if hasattr(e,"code"):
+            print "The server couldn't fulfill the request."
+            print "Error code: ", e.code
+        elif hasattr(e,'reason'):
+            print "We failed to reach a server"
+            print "Reason: ", e.reason
+        return None
+
+def fetch_latitude_and_logitude_from_dictionary(dictionary):
+    try:
+        lat =  dictionary["results"][0]["geometry"]["location"]["lat"]
+        lng =  dictionary["results"][0]["geometry"]["location"]["lng"]
+        return {'latitude': lat, 'longitude': lng}
+    except:
+        return {'message': 'Could not understand location'}
+
+
+@app.route('/dashboard_webservice', methods=['POST'])
+def dashboard_webservice():
+    time_string = request.form['reminder_time']
+    phone_number = request.form['phone_number']
+    event_name = request.form['event_name']
+    event_location_natural = request.form['event_location']
+
+    #Getting the lat and long
+    dictionary = get_latitude_and_longitude(event_location_natural)
+    lat_and_long = fetch_latitude_and_logitude_from_dictionary(dictionary)
+    if 'message' in lat_and_long:
+        return json.dumps(lat_and_long)
+
+    #Getting the time
+    cal = pdt.Calendar()
+    now = datetime.now()
+    dt = cal.parseDT(time_string, now)[0]
+    timestamp = dt.strftime("%s")
+
+    parameters = {
+      "reminder_time": timestamp,
+      "phone_number": phone_number,
+      "event": {
+        "name": event_name,
+        "location": event_location_natural,
+        "latitude": lat_and_long['latitude'],
+        "longitude": lat_and_long['longitude'],
+        "time": timestamp
+      }
+    }
+
+    url = "https://api.uber.com/v1/reminders?access_token=" + sesh['access_token']
+    # params = {'access_token': sesh['access_token']}
+    # final_url = url + urllib.urlencode(params)
+    response = requests.post(
+        url,
+        headers={
+            'content-type': 'application/json'
+        },
+        data=json.dumps(parameters)
+    )
+
+    return json.dumps(response.json())
 
 
 
@@ -117,4 +190,4 @@ def application_error(e):
     """Return a custom 500 error."""
     return 'Sorry, unexpected error: {}'.format(e), 500
 
-app.secret_key = "sTe5UXYC1b5hC25CToNDzYkPOGljdl0RJoHrjrF8"
+app.secret_key = os.urandom(24)
